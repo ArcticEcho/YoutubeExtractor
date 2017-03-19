@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -7,15 +8,27 @@ namespace YoutubeExtractor
 {
     internal static class Decipherer
     {
+        private static Dictionary<string, string> cachedJSs = new Dictionary<string, string>();
+        private static RegexOptions regOpts =
+#if !PORTABLE
+            RegexOptions.Compiled |
+#endif
+            RegexOptions.CultureInvariant;
+
+        // Regex Formed To Find Word or DollarSign. Find "C" in this: var A = B.sig||C (B.s)
+        private static Regex funcNameReg = new Regex(@"\""signature"",\s?([a-zA-Z0-9\$]+)\(", regOpts);
+
         public static string DecipherWithVersion(string cipher, string cipherVersion)
         {
-            string jsUrl = string.Format("http://s.ytimg.com/yts/jsbin/player-{0}.js", cipherVersion);
-            string js = HttpHelper.DownloadString(jsUrl);
+            if (!cachedJSs.ContainsKey(cipherVersion))
+            {
+                string jsUrl = string.Format("http://s.ytimg.com/yts/jsbin/player-{0}.js", cipherVersion);
+                cachedJSs[cipherVersion] = HttpHelper.DownloadString(jsUrl);
+            }
 
-            //Find "C" in this: var A = B.sig||C (B.s)
-            string functNamePattern = @"\""signature"",\s?([a-zA-Z0-9\$]+)\("; //Regex Formed To Find Word or DollarSign
+            string js = cachedJSs[cipherVersion];
 
-            var funcName = Regex.Match(js, functNamePattern).Groups[1].Value;
+            var funcName = funcNameReg.Match(js).Groups[1].Value;
             
             if (funcName.Contains("$")) 
             {
