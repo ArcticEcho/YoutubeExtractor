@@ -77,5 +77,16 @@ namespace YoutubeExtractor
 
             this.OnDownloadFinished(EventArgs.Empty);
         }
+
+        public Stream GetStream()
+        {
+            var request = (HttpWebRequest)WebRequest.Create(this.Video.DownloadUrl);
+
+            using (WebResponse response = request.GetResponse())
+            using (Stream source = response.GetResponseStream())
+            {
+                return source;
+            }
+        }
     }
 }
