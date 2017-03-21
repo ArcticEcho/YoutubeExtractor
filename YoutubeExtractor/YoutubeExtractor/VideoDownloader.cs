@@ -82,11 +82,10 @@ namespace YoutubeExtractor
         {
             var request = (HttpWebRequest)WebRequest.Create(this.Video.DownloadUrl);
 
-            using (WebResponse response = request.GetResponse())
-            using (Stream source = response.GetResponseStream())
-            {
-                return source;
-            }
+            var response = request.GetResponse();
+            var source = response.GetResponseStream();
+
+            return source;
         }
     }
 }
